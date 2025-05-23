@@ -1,49 +1,67 @@
-<script>
-let data = [];
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wishlist</title>
+</head>
+<body>
+  <h1>🎁 Wishlist</h1>
+  <div id="wishlist"></div>
 
-fetch('https://api.jsonbin.io/v3/b/683040cb8a456b7966a44a23/latest', {
-  headers: {
-    'X-Master-Key': '$2a$10$WP0N5E0S.72hHHBH.SjaCOkTpX4vki2XIyZahyb2JcrTwLa2EBUS2'
-  }
-})
-  .then(res => res.json())
-  .then(json => {
-    data = json.record; // <-- TADY JE KLÍČOVÁ ZMĚNA
-    const container = document.getElementById('wishlist');
+  <script>
+    const BIN_ID = '683040cb8a456b7966a44a23';
+    const MASTER_KEY = '$2a$10$WP0N5E0S.72hHHBH.SjaCOkTpX4vki2XIyZahyb2JcrTwLa2EBUS2'; // nahraď svým skutečným
+    let data = [];
 
-    data.forEach((item, index) => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <h3>${item.name}</h3>
-        <img src="${item.image}" style="max-width: 200px;" />
-        <p><a href="${item.url}" target="_blank">Odkaz na dárek</a></p>
-        <p><strong>Rezervoval:</strong> ${item.buyer || 'zatím nikdo'}</p>
-        <input type="text" id="buyer-${index}" placeholder="Zadej své jméno" />
-        <button onclick="reserve(${index})">Rezervovat</button>
-        <hr>
-      `;
-      container.appendChild(div);
+    // Načti wishlist
+    fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: {
+        'X-Master-Key': MASTER_KEY
+      }
+    })
+    .then(res => res.json())
+    .then(json => {
+      data = json.record; // tady je stále `record`, protože JSONBin ho přidává
+      const container = document.getElementById('wishlist');
+      container.innerHTML = '';
+
+      data.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <h3>${item.title}</h3>
+          <img src="${item.image}" style="max-width:200px;" />
+          <p><a href="${item.link}" target="_blank">Koupit</a></p>
+          <p><strong>Rezervoval:</strong> ${item.buyer || 'nikdo'}</p>
+          <input type="text" id="buyer-${index}" placeholder="Tvé jméno">
+          <button onclick="reserve(${index})">Rezervovat</button>
+          <hr>
+        `;
+        container.appendChild(div);
+      });
     });
-  });
 
-async function reserve(index) {
-  const input = document.getElementById(`buyer-${index}`);
-  const name = input.value.trim();
-  if (!name) return alert('Zadej jméno');
+    // Rezervace
+    async function reserve(index) {
+      const name = document.getElementById(`buyer-${index}`).value.trim();
+      if (!name) {
+        alert('Zadej své jméno');
+        return;
+      }
 
-  data[index].buyer = name;
+      data[index].buyer = name;
 
-  await fetch('https://api.jsonbin.io/v3/b/683040cb8a456b7966a44a23', {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': 'TVŮJ_MASTER_KEY'
-    },
-    body: JSON.stringify(data)
-  });
+      await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': MASTER_KEY
+        },
+        body: JSON.stringify(data) // protože root je array, ne objekt s `record`
+      });
 
-  alert('Rezervováno!');
-  location.reload();
-}
-</script>
-
+      alert('Rezervace uložena!');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
