@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Wishlist</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2em; }
+    .gift { border: 1px solid #ccc; padding: 1em; margin-bottom: 1em; }
+    img { max-width: 200px; display: block; margin-bottom: 0.5em; }
+    input[type="text"] { padding: 0.5em; margin-right: 0.5em; }
+    button { padding: 0.5em 1em; }
+  </style>
+</head>
+<body>
+  <h1>🎁 Wishlist</h1>
+  <div id="wishlist"></div>
+
+  <script>
+    const BIN_ID = "683040cb8a456b7966a44a23";
+    const API_KEY = "$2a$10$WP0N5E0S.72hHHBH.SjaCOkTpX4vki2XIyZahyb2JcrTwLa2EBUS2"; // <- Vlož svůj skutečný API klíč
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    async function loadGifts() {
+      const res = await fetch(API_URL, {
+        headers: {
+          'X-Master-Key': API_KEY
+        }
+      });
+      const json = await res.json();
+      const data = json.record;
+
+      const container = document.getElementById('wishlist');
+      container.innerHTML = '';
+      data.forEach((gift, index) => {
+        const div = document.createElement('div');
+        div.className = 'gift';
+        div.innerHTML = `
+          <img src="${gift.image}" alt="${gift.name}">
+          <h3><a href="${gift.url}" target="_blank">${gift.name}</a></h3>
+          <p><strong>Cena:</strong> ${gift.price || 'neuvedeno'}</p>
+          <p><strong>Rezervováno:</strong> ${gift.buyer || '<em>nikým</em>'}</p>
+          <input type="text" placeholder="Vaše jméno" id="name-${index}" />
+          <button onclick="reserveGift(${index})">Zarezervovat</button>
+        `;
+        container.appendChild(div);
+      });
+      window.giftData = data;
+    }
+
+    async function reserveGift(index) {
+      const nameInput = document.getElementById(`name-${index}`);
+      const name = nameInput.value.trim();
+      if (!name) return alert('Zadejte své jméno.');
+      window.giftData[index].buyer = name;
+
+      const res = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': API_KEY,
+          'X-Bin-Private': false
+        },
+        body: JSON.stringify(window.giftData)
+      });
+
+      if (res.ok) {
+        alert('Rezervace proběhla úspěšně!');
+        loadGifts();
+      } else {
+        alert('Nepodařilo se uložit.');
+      }
+    }
+
+    loadGifts();
+  </script>
+</body>
+</html>
