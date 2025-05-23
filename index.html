@@ -2,40 +2,78 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Wishlist</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      line-height: 1.6;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-    }
+    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 2rem; }
+    img { max-width: 150px; display: block; }
+    li { margin-bottom: 2rem; list-style: none; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
+    .taken { opacity: 0.5; }
+    button { margin-top: 0.5rem; }
   </style>
 </head>
 <body>
-  <h1>Wishlist</h1>
-  <div id="content">Načítám wishlist...</div>
+  <h1>🎁 Wishlist</h1>
+  <ul id="wishlist"></ul>
 
-  <!-- marked.js from CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
-    const markdownUrl = "https://cdn.jsdelivr.net/gh/4ME280-Webdesign-a-uzivatelska-rozhrani/SlabaDavidjan-wishlist@main/wishlist.md";
+    const WISHLIST_URL = 'https://cdn.jsdelivr.net/gh/4ME280-Webdesign-a-uzivatelska-rozhrani/SlabaDavidjan-wishlist@main/wishlist.md';
+    const storageKey = 'wishlist-taken';
 
-    fetch(markdownUrl)
+    const localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+    fetch(WISHLIST_URL)
       .then(res => res.text())
-      .then(md => {
-        document.getElementById("content").innerHTML = marked.parse(md);
-      })
-      .catch(err => {
-        document.getElementById("content").innerText = "Chyba při načítání wishlistu.";
-        console.error(err);
+      .then(text => {
+        const items = parseMarkdown(text);
+        render(items);
       });
+
+    function parseMarkdown(md) {
+      const lines = md.split('\n').filter(line => line.trim());
+      const items = [];
+      let current = {};
+      lines.forEach(line => {
+        if (line.startsWith('product:') || line.startsWith('název:')) {
+          if (Object.keys(current).length) items.push(current);
+          current = { title: line.split(':')[1].trim() };
+        } else if (line.startsWith('URL:')) {
+          current.url = line.split(':').slice(1).join(':').trim();
+        } else if (line.startsWith('image:')) {
+          current.image = line.split(':').slice(1).join(':').trim();
+        }
+      });
+      if (Object.keys(current).length) items.push(current);
+      return items.reverse(); // poslední první
+    }
+
+    function render(items) {
+      const ul = document.getElementById('wishlist');
+      ul.innerHTML = '';
+      items.forEach((item, idx) => {
+        const li = document.createElement('li');
+        const isTaken = localData[item.title];
+
+        li.className = isTaken ? 'taken' : '';
+        li.innerHTML = `
+          <h2>${item.title}</h2>
+          <a href="${item.url}" target="_blank">${item.url}</a><br/>
+          <img src="${item.image}" alt="${item.title}" /><br/>
+          ${isTaken ? `<strong>🔒 Zabráno: ${isTaken}</strong>` : `<button data-idx="${idx}">Zabrat</button>`}
+        `;
+        if (!isTaken) {
+          li.querySelector('button').addEventListener('click', () => {
+            const name = prompt('Zadej své jméno:');
+            if (name) {
+              localData[item.title] = name;
+              localStorage.setItem(storageKey, JSON.stringify(localData));
+              render(items);
+            }
+          });
+        }
+        ul.appendChild(li);
+      });
+    }
   </script>
 </body>
 </html>
+
