@@ -3,10 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <title>Wishlist</title>
-  <script type="module" src="https://cdn.jsdelivr.net/gh/zerodevx/zero-md@2/zero-md.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 2rem; }
+    img { max-width: 150px; display: block; }
+    li { margin-bottom: 2rem; list-style: none; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
+    .taken { opacity: 0.5; }
+    button { margin-top: 0.5rem; }
+  </style>
 </head>
 <body>
   <h1>🎁 Wishlist</h1>
-  <zero-md src="https://cdn.jsdelivr.net/gh/4ME280-Webdesign-a-uzivatelska-rozhrani/SlabaDavidjan-wishlist@main/wishlist.md"></zero-md>
+  <ul id="wishlist"></ul>
+
+  <script>
+    const wishlistData = [
+      {
+        title: "Ferrari F40 - vůz",
+        url: "https://www.autoscout24.cz/nabidky/ferrari-f40-fresh-service-benzin-cervena-0ec8d89e-9ce0-49c4-b4a4-8807f528c0dd",
+        image: "https://prod.pictures.autoscout24.net/listing-images/0ec8d89e-9ce0-49c4-b4a4-8807f528c0dd_f32c4802-c3a0-493e-bd27-cf73f67036c2.jpg/720x540.webp"
+      },
+      {
+        title: "Tissot PRX Powermatic 80 – Luxusní hodinky",
+        url: "https://hodinkovna.cz/panske-hodinky-tissot-prx-powermatic-80-t137-407-11-051-00",
+        image: "https://hodinkovna.cz/media/catalog/product/cache/4/image/1320x1584/z/e/cache/1920_zegarek_tissot_t137_407_11_051_00_1.webp"
+      },
+      {
+        title: "Sony FE 85 mm f/1.4 GM II – G Master objektiv",
+        url: "https://www.megapixel.cz/sony-fe-85-mm-f-1-4-gm-ii",
+        image: "https://cdn.megapixel.cz/images/product-w1120h1120/7/446807.webp?v=1724864963"
+      },
+      {
+        title: "Sony FX3 – Full-Frame Cinema Camera",
+        url: "https://www.megapixel.cz/sony-ilme-fx3",
+        image: "https://cdn.megapixel.cz/images/product-w1120h1120/3/283793.webp?v=1614156539"
+      },
+      {
+        title: "Lenovo Go – Powerbanka 20 000 mAh",
+        url: "https://www.alza.cz/lenovo-go-usb-c-laptop-power-bank-d12683790.htm",
+        image: "https://image.alza.cz/products/NT461a1g2/NT461a1g2.jpg?width=800&height=800"
+      },
+      {
+        title: "Albi sada – půllitr s vůní do auta",
+        url: "https://www.google.com/search?q=Albi+sada+%E2%80%93+p%C5%AFllitr+s+v%C5%AFn%C3%AD+do+auta",
+        image: "https://albi.cz/data/cache/thumb_550-550-12/products/55787/f73a3e57b550fade9b0ab6fd74d16045/60571.webp?s=99010659e827972fd502d77250494a09"
+      },
+      {
+        title: "HP ZBook Fury G11 – Herní počítač",
+        url: "https://www.alza.cz/hp-zbook-fury-g11-silver-d12424362.htm",
+        image: "https://image.alza.cz/products/HPBN4271y4/HPBN4271y4.jpg?width=800&height=800"
+      },
+      {
+        title: "Corsair K55 PRO RGB – Herní klávesnice",
+        url: "https://www.alza.cz/corsair-k55-core-rgb-black-us-d12280531.htm",
+        image: "https://image.alza.cz/products/CORk55p/CORk55p.jpg?width=800&height=800"
+      },
+      {
+        title: "SteelSeries Arctis 7 White – Bezdrátová herní sluchátka",
+        url: "http://alza.cz/steelseries-arctis-pro-wireless-d5285279.htm",
+        image: "https://image.alza.cz/products/MX043o24/MX043o24.jpg?width=800&height=800"
+      },
+      {
+        title: "Vila 1157 m², pozemek 9555 m², Pod Havránkou, Praha - Troja",
+        url: "https://www.sreality.cz/detail/prodej/dum/vila/praha-troja-pod-havrankou/2287194700",
+        image: "https://d18-a.sdn.cz/d_18/c_img_oY_C/kBkJRwehYQKXlyFC5dD6I/688c.jpeg?fl=res,1200,1200,1|wrm,/watermark/sreality.png,10|shr,,20|webp,80"
+      }
+    ];
+
+    const storageKey = 'wishlist-taken';
+    const localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+    function render(items) {
+      const ul = document.getElementById('wishlist');
+      ul.innerHTML = '';
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        const isTaken = localData[item.title];
+        li.className = isTaken ? 'taken' : '';
+        li.innerHTML = `
+          <h2>${item.title}</h2>
+          <a href="${item.url}" target="_blank">${item.url}</a><br/>
+          <img src="${item.image}" alt="${item.title}" /><br/>
+          ${isTaken ? `<strong>🔒 Zabráno: ${isTaken}</strong>` : `<button>Zabrat</button>`}
+        `;
+        if (!isTaken) {
+          li.querySelector('button').addEventListener('click', () => {
+            const name = prompt('Zadej své jméno:');
+            if (name) {
+              localData[item.title] = name;
+              localStorage.setItem(storageKey, JSON.stringify(localData));
+              render(items);
+            }
+          });
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    render(wishlistData);
+  </script>
 </body>
 </html>
+
