@@ -2,65 +2,40 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Wishlist</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 2rem; }
-    img { max-width: 150px; display: block; }
-    li { margin-bottom: 2rem; list-style: none; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
-    .taken { opacity: 0.5; }
-    button { margin-top: 0.5rem; }
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.6;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
   </style>
 </head>
 <body>
-  <h1>🎁 Wishlist</h1>
-  <ul id="wishlist">Načítání...</ul>
+  <h1>Wishlist</h1>
+  <div id="content">Načítám wishlist...</div>
 
+  <!-- marked.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
-    const storageKey = 'wishlist-taken';
-    const localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const markdownUrl = "https://cdn.jsdelivr.net/gh/4ME280-Webdesign-a-uzivatelska-rozhrani/SlabaDavidjan-wishlist@main/wishlist.md";
 
-    async function fetchMarkdownAndRender() {
-      const url = 'https://cdn.jsdelivr.net/gh/4ME280-Webdesign-a-uzivatelska-rozhrani/SlabaDavidjan-wishlist@main/wishlist.md';
-      const res = await fetch(url);
-      const text = await res.text();
-
-      const items = [...text.matchAll(/\-\s*\[([^\]]+)\]\(([^)]+)\)\s*!?\[.*?\]\(([^)]+)\)/g)].map(match => ({
-        title: match[1],
-        url: match[2],
-        image: match[3]
-      }));
-
-      const ul = document.getElementById('wishlist');
-      ul.innerHTML = '';
-
-      items.forEach((item) => {
-        const li = document.createElement('li');
-        const isTaken = localData[item.title];
-        li.className = isTaken ? 'taken' : '';
-        li.innerHTML = `
-          <h2>${item.title}</h2>
-          <a href="${item.url}" target="_blank">${item.url}</a><br/>
-          <img src="${item.image}" alt="${item.title}" /><br/>
-          ${isTaken ? `<strong>🔒 Zabráno: ${isTaken}</strong>` : `<button>Zabrat</button>`}
-        `;
-        if (!isTaken) {
-          li.querySelector('button').addEventListener('click', () => {
-            const name = prompt('Zadej své jméno:');
-            if (name) {
-              localData[item.title] = name;
-              localStorage.setItem(storageKey, JSON.stringify(localData));
-              fetchMarkdownAndRender();
-            }
-          });
-        }
-        ul.appendChild(li);
+    fetch(markdownUrl)
+      .then(res => res.text())
+      .then(md => {
+        document.getElementById("content").innerHTML = marked.parse(md);
+      })
+      .catch(err => {
+        document.getElementById("content").innerText = "Chyba při načítání wishlistu.";
+        console.error(err);
       });
-    }
-
-    fetchMarkdownAndRender();
   </script>
 </body>
 </html>
-
-
-
